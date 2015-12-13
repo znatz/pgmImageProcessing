@@ -119,12 +119,32 @@ class ViewController: NSViewController {
         // Show Parsing Result
         NSLog("%@\n%@\nwidth : %d height : %d\ndepth : %d", pgm.version, pgm.comment, pgm.width, pgm.height, pgm.depth)
         
-        // Transfer Pixels and get histgram
+        // Get Histgram
         histgram = Array<Int>(count: 256, repeatedValue: 0)
         for (y=0; y<pgm.height; y++){
             for (x=0; x<pgm.width; x++) {
                 histgram[Int(pgm.pixels[x][y])] += 1
-                pgm.pixels[x][y] = 255 - pgm.pixels[x][y]
+            }
+        }
+        let maxValue = histgram.maxElement()
+        let avgValue = histgram.reduce(0, combine: +) / 255
+        
+        // Transfer Pixels and get histgram
+        let ramp:Double = 2.6
+        for (y=0; y<pgm.height; y++){
+            for (x=0; x<pgm.width; x++) {
+                var p = pgm.pixels[x][y]
+//                let tester = ramp * (Double(p) - Double(128)) + Double(128)
+//                switch tester {
+//                    case 255..<Double(Int.max):
+//                        p = 255
+//                    case Double(Int.min)..<0:
+//                        p = 0
+//                    default:
+//                        p = UInt8(tester)
+//                }
+                p = UInt8(255.0 * pow(Double(p)/255.0, 1.5))
+                pgm.pixels[x][y] = p
             }
         }
         
@@ -140,18 +160,13 @@ class ViewController: NSViewController {
         
         for (y=0; y<pgm.height; y++){
             for (x=0; x<pgm.width; x++) {
-//                var p = pgm.pixels[x][y]
                 var p = pgm.pixels[x][y]
-                p = p > 150 ? 255 : 0
                 outputstream?.write(&p, maxLength: 1)
             }
         }
         outputstream?.close()
         
         //  Draw histgram of image
-        let maxValue = histgram.maxElement()
-        let minValue = histgram.minElement()
-        let avgValue = (maxValue! + minValue!) / 2
         let WIN_WIDTH = 1100
         let WIN_HEIGHT = 750
         let ratioY = maxValue!  / WIN_HEIGHT + 5
